@@ -5,6 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <title>一封信</title>
+  <script data-goatcounter="https://ynzzz.goatcounter.com/count"
+        async src="//gc.zgo.at/count.js"></script>
   <style>
     * { box-sizing: border-box; }
     html, body {
@@ -92,34 +94,90 @@
       "出于私心当然希望你还是舍不得我的哈哈。",
       "等你想好了，再告诉我，等你。"
     ];
+  const sentences = [
+    // 这里保留你原来的 23 句话，不要改
+  ];
 
-    let i = 0;
-    const el = document.getElementById("sentence");
-    const counter = document.getElementById("counter");
-    const prev = document.getElementById("prev");
-    const next = document.getElementById("next");
+  let i = 0;
+  const el = document.getElementById("sentence");
+  const counter = document.getElementById("counter");
+  const prev = document.getElementById("prev");
+  const next = document.getElementById("next");
 
-    function render() {
-      el.textContent = sentences[i];
-      counter.textContent = (i + 1) + " / " + sentences.length;
-      prev.disabled = i === 0;
-      next.disabled = i === sentences.length - 1;
+  function trackProgress() {
+    if (!window.goatcounter || !window.goatcounter.count) return;
+
+    window.goatcounter.count({
+      path: "sentence-" + (i + 1),
+      title: "阅读进度 " + (i + 1) + " / " + sentences.length,
+      event: true
+    });
+
+    if (
+      i === sentences.length - 1 &&
+      !sessionStorage.getItem("letterCompleted")
+    ) {
+      window.goatcounter.count({
+        path: "completed",
+        title: "完成阅读",
+        event: true
+      });
+
+      sessionStorage.setItem("letterCompleted", "1");
     }
+  }
 
-    prev.addEventListener("click", () => { if (i > 0) { i--; render(); } });
-    next.addEventListener("click", () => { if (i < sentences.length - 1) { i++; render(); } });
+  function render(track = false) {
+    el.textContent = sentences[i];
+    counter.textContent = (i + 1) + " / " + sentences.length;
+    prev.disabled = i === 0;
+    next.disabled = i === sentences.length - 1;
 
-    let startY = 0;
-    document.addEventListener("touchstart", (e) => { startY = e.changedTouches[0].clientY; }, { passive: true });
-    document.addEventListener("touchend", (e) => {
+    if (track) {
+      trackProgress();
+    }
+  }
+
+  prev.addEventListener("click", () => {
+    if (i > 0) {
+      i--;
+      render(true);
+    }
+  });
+
+  next.addEventListener("click", () => {
+    if (i < sentences.length - 1) {
+      i++;
+      render(true);
+    }
+  });
+
+  let startY = 0;
+
+  document.addEventListener(
+    "touchstart",
+    (e) => {
+      startY = e.changedTouches[0].clientY;
+    },
+    { passive: true }
+  );
+
+  document.addEventListener(
+    "touchend",
+    (e) => {
       const dy = e.changedTouches[0].clientY - startY;
+
       if (Math.abs(dy) < 40) return;
+
       if (dy < 0 && i < sentences.length - 1) i++;
       if (dy > 0 && i > 0) i--;
-      render();
-    }, { passive: true });
 
-    render();
+      render(true);
+    },
+    { passive: true }
+  );
+
+  render();
   </script>
 </body>
 </html>
